@@ -11,7 +11,7 @@ class OUActionNoise(object):
     distribution that tends to return to the mean over time
     call function returns noise (x) which has as many dimensions as network outputs
     """
-    def __init__(self, mu, sigma=0.15, theta=.2, dt=1e-2, x0=None,override = True):
+    def __init__(self, mu, sigma=0.15, theta=.2, dt=1, x0=None,override = True):
         self.theta = theta  # 
         self.mu = mu        # distribution mean
         self.sigma = sigma  # distribution std dev
@@ -26,7 +26,7 @@ class OUActionNoise(object):
         self.x_prev = x
         
         if self.override:
-            x = np.random.normal(0,self.sigma)
+            x = np.random.normal(0,self.sigma*10.0)
         return x
 
     def reset(self):
@@ -193,7 +193,8 @@ class ActorNetwork(nn.Module):
         x = self.fc2(x)
         x = self.bn2(x)
         x = F.relu(x)
-        x = T.tanh(self.mu(x))
+        #x = T.tanh(self.mu(x))
+        x = T.sigmoid(self.mu(x))
         return x
 
     def save_checkpoint(self):

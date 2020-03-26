@@ -50,7 +50,7 @@ class Car_Follow_1D():
         
         # reward penalizes for difference in velocity, and deviation from spacing of 10
         reward = - abs(self.car1[1]-self.car2[1]) - abs(self.car1[0]-self.car2[0]-10)
-        if self.car2[0] > self.car1[0]: # collision
+        if self.car2[0] > self.car1[0] or (self.car1[0] - self.car2[0]) > 60: # collision or dropoff
             reward = self.crash_reward
         
         # flatten reward for some reason
@@ -104,7 +104,7 @@ class Car_Follow_1D():
             plt.xlim([0,len(self.all_rewards)])
             plt.legend(["Reward","Avg Reward thus Far"])
             plt.draw()
-            plt.pause(0.1)
+            plt.pause(0.01)
             plt.clf()
         if close:
             plt.close()

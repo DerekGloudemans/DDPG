@@ -8,13 +8,13 @@ import numpy as np
 import os
 
 # define agent
-agent = Agent(alpha=0.000025, beta=0.00025, input_dims=[3], tau=0.001, env=None,
-              batch_size=64,  layer1_size=400, layer2_size=300, n_actions=1)
-#agent.load_models()
+agent = Agent(alpha=0.00025, beta=0.0025, input_dims=[3], tau=0.002, env=None,
+              batch_size=64,  layer1_size=100, layer2_size=50, n_actions=1)
+agent.load_models()
 
 score_history = []
 episode_history = []
-
+crash_penalty = -1000
 
 print ("Starting Episodes")
 # for each loop, reset environment with new random seed
@@ -24,20 +24,20 @@ for i in range(1000):
     random.seed(i)
     
     # define environment
-    env = Car_Follow_1D(sigma = 0,crash_penalty = -1000000) 
+    env = Car_Follow_1D(sigma = 0.003,crash_penalty = crash_penalty) 
     obs = env.vis_state
     done = False
     score = 0
     while not done:
         act = agent.choose_action(obs)
-        act = act / 10.0
+        act = (act-0.5)*0.2 # accelerations in range (-0.2,0.2)
         # shift action into reasonable range
         
         new_state,reward,step_counter = env(act)
        
         # set done
         done = 0
-        if reward <= -1000000 or step_counter > 1000: # terminal state
+        if reward <= crash_penalty or step_counter > 500: # terminal state
             done = 1
 
         obs = obs.reshape(-1).astype(float)
@@ -65,10 +65,9 @@ for i in range(1000):
         with open(os.path.join("checkpoints","episode_history2"),'wb') as f:
             pickle.dump(episode_history,f)
 
-    if i % 100 == 0:
+    if i % 20 == 0:
         env.show_episode()
         
-    print('episode ', i, 'score %.2f' % score,
-          'trailing 100 games avg %.3f' % np.mean(score_history[-100:]))
+    print('Episode {} average score: {}'.format(i,score/step_counter))
 
 episode_history[-1].show_episode()
