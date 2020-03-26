@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-class Toy_Environment():
+class Car_Follow_1D():
     """
     A simplistic environment that models 2 vehicles (leader and follower) along
     a 1D track with first-order dynamics (position and velocity of each vehicle
@@ -60,7 +60,7 @@ class Toy_Environment():
         self._vis_state = np.array([(self.car1[0]-self.car2[0]),self.car2[1],(self.car2[1]-self.car1[1])])
         self.step += 1
         
-        return self.vis_state,reward
+        return self.vis_state,reward,self.step
     
     @property
     def vis_state(self):
@@ -104,7 +104,7 @@ class Toy_Environment():
 
 if True and __name__ == "__main__":        
     # test code
-    env = Toy_Environment()
+    env = Car_Follow_1D()
     state = env.vis_state
     for i in range(0,300):
         if state[0] > 10:
@@ -113,5 +113,5 @@ if True and __name__ == "__main__":
                 acc = acc - state[2]
         else:
             acc = -0.05
-        state,reward = env(acc)
+        state,reward,step = env(acc)
     env.show_episode()
