@@ -9,7 +9,7 @@ class Car_Follow_1D():
     visible by the follower vehicle and expects the control acceleration as input
     """
     
-    def __init__(self):
+    def __init__(self,sigma = 0.01,crash_penalty = -10000):
         self.car1 = np.array([10,1]) # position, velocity
         self.car2 = np.array([0,0])
         
@@ -20,12 +20,12 @@ class Car_Follow_1D():
         self.all_car2.append(self.car2)
         self.all_rewards = [0]
         self.avg_rewards = [0]
+        self.crash_reward = crash_penalty
         # keeps track of number of steps per episode
         self.step = 0
-        
+        self.sigma = sigma
         # sets starting info visible to follower car: spacing,vel,delta vel
         self._vis_state = np.array([(self.car1[0]-self.car2[0]),self.car2[1],(self.car2[1]-self.car1[1])])
-        
 
     def __call__(self,car2_acc):
         """
@@ -34,7 +34,7 @@ class Car_Follow_1D():
         """
         
         # update car1 position
-        car1_acc = np.random.normal(0,0.1)
+        car1_acc = np.random.normal(0,self.sigma)
         car1_pos = self.car1[0] + max(0,self.car1[1] + 0.5*car1_acc) # cap to prevent backwards motion
         car1_vel = max(self.car1[1] + car1_acc,0) # cap to prevent backwards motion
         self.car1 = np.array([car1_pos,car1_vel])
@@ -51,7 +51,14 @@ class Car_Follow_1D():
         # reward penalizes for difference in velocity, and deviation from spacing of 10
         reward = - abs(self.car1[1]-self.car2[1]) - abs(self.car1[0]-self.car2[0]-10)
         if self.car2[0] > self.car1[0]: # collision
-            reward = -100
+            reward = self.crash_reward
+        
+        # flatten reward for some reason
+        try:
+            reward = reward[0]
+        except:
+            pass
+        
         self.all_rewards.append(reward)
         self.avg_rewards.append(sum(self.all_rewards)/len(self.all_rewards))
         
