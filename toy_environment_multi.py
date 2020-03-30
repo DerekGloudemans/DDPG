@@ -55,7 +55,9 @@ class Multi_Car_Follow_1D():
                 actions.append(acc)
         
             elif self.agent_types[ag] == "RL":
-                actions.append(model.choose_actions(state))
+                act = model.choose_action(state)
+                act = (act-0.5)*0.2
+                actions.append(act)
                 
         return actions
                 
