@@ -26,7 +26,7 @@ class OUActionNoise(object):
         self.x_prev = x
         
         if self.override:
-            x = np.random.normal(0,self.sigma*10.0)
+            x = np.random.normal(0,self.sigma*10.0 /3.0) #temporary reduction of noise
         return x
 
     def reset(self):
@@ -245,14 +245,18 @@ class Agent(object):
         # initializes target network parameters to be the same as trained networks
         self.update_network_parameters(tau=1)
 
-    def choose_action(self, observation):
+    def choose_action(self, observation,EVAL = False):
         """
         Given a state, use Actor Network to select an action and add OUAction noise
         """
         self.actor.eval()
         observation = T.tensor(observation, dtype=T.float).to(self.actor.device)
         mu = self.actor.forward(observation).to(self.actor.device)
-        mu_prime = mu + T.tensor(self.noise(),
+        # disable noise in eval mode
+        if EVAL:
+            mu_prime = mu
+        else:
+            mu_prime = mu + T.tensor(self.noise(),
                                  dtype=T.float).to(self.actor.device)
         self.actor.train()
         #print("Action: {} Noise: {}".format(mu.data[0],(mu_prime - mu).data[0]))

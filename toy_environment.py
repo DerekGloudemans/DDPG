@@ -20,13 +20,15 @@ class Car_Follow_1D():
         self.all_car2.append(self.car2)
         self.all_rewards = [0]
         self.avg_rewards = [0]
+        self.all_vis_states = []
         self.crash_reward = crash_penalty
         # keeps track of number of steps per episode
         self.step = 0
         self.sigma = sigma
         # sets starting info visible to follower car: spacing,vel,delta vel
         self._vis_state = np.array([(self.car1[0]-self.car2[0]),self.car2[1],(self.car2[1]-self.car1[1])])
-
+        self.all_vis_states.append(self._vis_state)
+        
     def __call__(self,car2_acc):
         """
         Expects control input from car 2 for timestep t. Calculates state t+1, 
@@ -49,9 +51,12 @@ class Car_Follow_1D():
         self.all_car2.append(self.car2)
         
         # reward penalizes for difference in velocity, and deviation from spacing of 10
-        reward = - abs(self.car1[1]-self.car2[1]) - abs(self.car1[0]-self.car2[0]-10)
-        if self.car2[0] > self.car1[0] or (self.car1[0] - self.car2[0]) > 60: # collision or dropoff
+        reward = - abs(self.car1[1]-self.car2[1]) - (self.car1[0]-self.car2[0]-10)**2
+        if self.car2[0] > self.car1[0]: # collision
             reward = self.crash_reward
+        if (self.car1[0] - self.car2[0]) > 35: # dropoff
+            reward = self.crash_reward
+        
         
         # flatten reward for some reason
         try:
@@ -65,6 +70,7 @@ class Car_Follow_1D():
 
         
         self._vis_state = np.array([(self.car1[0]-self.car2[0]),self.car2[1],(self.car2[1]-self.car1[1])])
+        self.all_vis_states.append(self._vis_state)
         self.step += 1
         
         return self.vis_state,reward,self.step
@@ -83,8 +89,15 @@ class Car_Follow_1D():
         
         plt.figure(figsize = (30,10))
         plt.title("Single Episode")
+        
+        for i in range(len(self.all_vis_states)):
+            if len(self.all_vis_states[i].shape) == 1:
+                self.all_vis_states[i] = self.all_vis_states[i][:,np.newaxis]
+        self.all_vis_states = np.array(self.all_vis_states)
+
+        
         for i in range(0,len(self.all_car1)):
-            plt.subplot(211)
+            plt.subplot(311)
             plt.scatter(self.all_car1[i][0],1,color = (0.2,0.8,0.2))
             plt.scatter(self.all_car2[i][0],1,color = (0.8,0.2,0.2))
             reward = round(self.all_rewards[i] *1000)/1000.0
@@ -96,15 +109,27 @@ class Car_Follow_1D():
 
             
         
-            plt.subplot(212)
+            plt.subplot(312)
             plt.plot(self.all_rewards[:i])
             plt.plot(self.avg_rewards[:i])
             plt.ylabel("Reward")
             plt.xlabel("Timestep")
             plt.xlim([0,len(self.all_rewards)])
             plt.legend(["Reward","Avg Reward thus Far"])
+            
+            plt.subplot(313)
+            plt.plot(self.all_vis_states[:i,0],color = (0.3,0.6,0.3))
+            plt.plot(self.all_vis_states[:i,1],color = (0.6,0.3,0.3))
+            plt.plot(self.all_vis_states[:i,2],color = (0.3,0.3,0.6))
+            plt.ylabel("State Variable Value")
+            plt.xlabel("Timestep")
+            plt.xlim([0,len(self.all_vis_states)])
+            plt.legend(["Spacing","Velocity", "Delta V"])
+            
+            
+            
             plt.draw()
-            plt.pause(0.01)
+            plt.pause(0.001)
             plt.clf()
         if close:
             plt.close()
