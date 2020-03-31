@@ -26,7 +26,7 @@ class OUActionNoise(object):
         self.x_prev = x
         
         if self.override:
-            x = np.random.normal(0,self.sigma*10.0 /3.0) #temporary reduction of noise
+            x = np.random.normal(0,self.sigma*10.0/5.0) #temporary reduction of noise
         return x
 
     def reset(self):

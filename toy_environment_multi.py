@@ -55,7 +55,7 @@ class Multi_Car_Follow_1D():
                 actions.append(acc)
         
             elif self.agent_types[ag] == "RL":
-                act = model.choose_action(state)
+                act = model.choose_action(state,EVAL = False)
                 act = (act-0.5)*0.2
                 actions.append(act)
                 
@@ -101,7 +101,7 @@ class Multi_Car_Follow_1D():
         self.all_dv.append(dv) 
         
         # reward
-        REW_WEIGHT = 100
+        REW_WEIGHT = 10
         rew_vel = np.std(self.all_vel[-1]) * REW_WEIGHT
         rew_spacing = np.sum(np.abs(self.all_spacing[-1]-10.0)**2) 
         reward = -rew_vel -rew_spacing
@@ -131,11 +131,15 @@ class Multi_Car_Follow_1D():
         plt.figure(figsize = (30,10))
         plt.title("Single Episode")
 
+        rrange = np.arange(0,1,1/self.n_agents)
+        grange = np.arange(0.2,0.3,0.1/self.n_agents)
+        brange = np.arange(0.5,0.6,0.1/self.n_agents)
         colors = np.random.rand(self.n_agents,3)
+        colors = np.array([rrange,grange,brange]).transpose()
         
         for i in range(len(self.all_pos)):
-            plt.subplot(311)
             
+            plt.subplot(311)
             for j in range(len(self.all_pos[0])):
                 plt.scatter(self.all_pos[i][j],1,color = colors[j])
                 
@@ -145,8 +149,6 @@ class Multi_Car_Follow_1D():
             center = self.all_pos[i][0]
             plt.xlim([center -40*self.n_agents, center + 10])
             plt.xlabel("Position")
-
-            
         
             plt.subplot(312)
             plt.plot(self.all_rewards[:i])
@@ -155,7 +157,16 @@ class Multi_Car_Follow_1D():
             plt.xlim([0,len(self.all_rewards)])
             plt.legend(["Reward"])
             
-            
+            plt.subplot(313)
+            all_vel = np.array(self.all_vel)
+            legend = []
+            for j in range(self.n_agents):
+                legend.append("Car {}".format(j))
+                plt.plot(all_vel[:i,j],color = colors[j])
+            plt.ylabel("Velocity")
+            plt.xlabel("Timestep")
+            plt.xlim([0,len(self.all_vel)])
+            plt.legend(legend)
             
             plt.draw()
             plt.pause(0.01)

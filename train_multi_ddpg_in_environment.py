@@ -14,18 +14,18 @@ agent.load_models()
 
 score_history = []
 episode_history = []
-crash_penalty = -1000
+crash_penalty = -100000
 
 print ("Starting Episodes")
 # for each loop, reset environment with new random seed
-for i in range(3000):
+for i in range(1500):
     # to create unique episodes
     np.random.seed(i)
     random.seed(i)
     
     # define environment
     agent_types = ["rand","RL","step_accel","step_accel","step_accel","step_accel"]
-    env = Multi_Car_Follow_1D(sigma = 0.1,agent_list = agent_types, crash_penalty = crash_penalty) 
+    env = Multi_Car_Follow_1D(sigma = 0.01,agent_list = agent_types, crash_penalty = crash_penalty) 
     done = False
     score = 0
     while not done:
