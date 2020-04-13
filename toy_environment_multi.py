@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+import matplotlib.colors as mpc
+from scipy.ndimage.filters import gaussian_filter1d as filter_gaussian
 class Multi_Car_Follow_1D():
     """
     A simplistic environment that models n vehicles (leader and followers) along
@@ -58,6 +59,15 @@ class Multi_Car_Follow_1D():
                 act = model.choose_action(state,EVAL = False)
                 act = (act-0.5)*0.2
                 actions.append(act)
+                
+            elif self.agent_types[ag] == "step":
+                if self.step in [200,400]:
+                    acc = -0.5
+                elif self.step in [300]:
+                    acc = 0.5
+                else:
+                    acc = 0
+                actions.append(acc)
                 
         return actions
                 
@@ -125,40 +135,50 @@ class Multi_Car_Follow_1D():
         return reward,self.step
  
     
-    def show_episode(self,close = True):
+    def show_episode(self,close = True,smooth = True):
         plt.style.use("seaborn")
         
-        plt.figure(figsize = (30,10))
+        plt.figure(figsize = (40,10))
         plt.title("Single Episode")
-
-        rrange = np.arange(0,1,1/self.n_agents)
-        grange = np.arange(0.2,0.3,0.1/self.n_agents)
-        brange = np.arange(0.5,0.6,0.1/self.n_agents)
-        colors = np.random.rand(self.n_agents,3)
+        rrange = np.arange(0.4,1.0,0.6/self.n_agents)
+        grange = np.arange(0.6,0.699,0.1/self.n_agents)
+        brange = np.arange(0.8,0.899,0.1/self.n_agents)
+        #colors = np.random.rand(self.n_agents,3)
         colors = np.array([rrange,grange,brange]).transpose()
+        try:     
+            colors[0,2] = 0
+        except:    
+            pass
+        colors = mpc.hsv_to_rgb(colors)
         
+        all_pos = np.array(self.all_pos)
+        all_vel = np.array(self.all_vel).transpose()
+        if smooth:
+            print(all_vel.shape)
+            for row in range(1,len(all_vel)):
+                all_vel[row] = filter_gaussian(all_vel[row],sigma = 3, truncate = 4.0)
+        all_vel = all_vel.transpose()
         for i in range(len(self.all_pos)):
             
-            plt.subplot(311)
+            plt.subplot(411)
             for j in range(len(self.all_pos[0])):
                 plt.scatter(self.all_pos[i][j],1,color = colors[j])
                 
             reward = round(self.all_rewards[i] *1000)/1000.0
-            plt.annotate("Reward: {}".format(reward),(self.all_pos[i][1]-5,1))
+            plt.annotate("Reward: {}".format(reward),(self.all_pos[i][1]-5,1.1))
 
             center = self.all_pos[i][0]
             plt.xlim([center -40*self.n_agents, center + 10])
             plt.xlabel("Position")
         
-            plt.subplot(312)
+            plt.subplot(412)
             plt.plot(self.all_rewards[:i])
             plt.ylabel("Reward")
             plt.xlabel("Timestep")
             plt.xlim([0,len(self.all_rewards)])
             plt.legend(["Reward"])
             
-            plt.subplot(313)
-            all_vel = np.array(self.all_vel)
+            plt.subplot(413)
             legend = []
             for j in range(self.n_agents):
                 legend.append("Car {}".format(j))
@@ -168,18 +188,28 @@ class Multi_Car_Follow_1D():
             plt.xlim([0,len(self.all_vel)])
             plt.legend(legend)
             
+            plt.subplot(414)
+            legend = []
+            for j in range(self.n_agents):
+                legend.append("Car {}".format(j))
+                plt.plot(all_pos[:i,j]-all_pos[:i,0],color = colors[j])
+            plt.ylabel("Spacing Relative to Lead Vehicle")
+            plt.xlabel("Timestep")
+            plt.xlim([0,len(self.all_pos)])
+            plt.legend(legend)
+            
             plt.draw()
-            plt.pause(0.01)
+            plt.pause(0.0001)
             plt.clf()
         if close:
             plt.close()
 
 if True and __name__ == "__main__":        
     # test code
-    agent_list = ["rand","step_accel","step_accel","step_accel","step_accel","step_accel"]
+    agent_list = ["step","step_accel","step_accel","step_accel","step_accel","step_accel"]
     env = Multi_Car_Follow_1D(agent_list = agent_list)
-    for i in range(0,200):
+    for i in range(0,300):
         actions = env.get_actions()
         reward,step = env(actions)
 
-    env.show_episode()
+    env.show_episode(smooth = True)

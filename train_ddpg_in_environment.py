@@ -1,5 +1,5 @@
 from toy_environment import Car_Follow_1D
-from ddpg_torch_copy import Agent
+from safe_ddpg_torch_copy import Agent
 #from DDPG_pytorch_phil_tabor.ddpg_torch import Agent
 
 import _pickle as pickle
