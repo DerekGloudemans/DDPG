@@ -13,22 +13,22 @@ activation_fn = "tanh"
 
 #define agent
 agent = Agent_Safe(alpha=0.001, beta=0.01, input_dims=[3], tau=0.002, env=None,
-              batch_size=64,  layer1_size=100, layer2_size=50, n_actions=1, activation = activation_fn)
+              batch_size=64,  layer1_size=10, layer2_size=10, max_size = 5000, n_actions=1, activation = activation_fn)
 agent.load_models()
-
+best_score = -10000
 score_history = []
 episode_history = []
 crash_penalty = -10000
 
 print ("Starting Episodes")
 # for each loop, reset environment with new random seed
-for i in range(1000):
+for i in range(5000):
     # to create unique episodes
     np.random.seed(i)
     random.seed(i)
     
     # define environment
-    env = Car_Follow_1D(sigma = 0.05,crash_penalty = crash_penalty) 
+    env = Car_Follow_1D(sigma = 0.1,crash_penalty = crash_penalty) 
     obs = env.vis_state
     done = False
     score = 0
@@ -63,19 +63,25 @@ for i in range(1000):
         
     # at end of episode, store score_history
     score_history.append(score)
-
+    avg_score = score/step_counter 
+    
     # periodically save checkpoints of model states
-    if i % 25 == 0:
+    if score/step_counter > best_score:
+        best_score = score/step_counter
         agent.save_models()
-        
+        env.show_episode()
+
         # store episode history in file
         episode_history.append(env)
         with open(os.path.join("model_current","episode_history"),'wb') as f:
             pickle.dump(episode_history,f)
 
-    if i % 20 == 0:
+    if i % 100 == 0:
         env.show_episode()
-        
+    
+    # decay model
+    agent.noise.reset()
+    
     print('Episode {} average score: {}'.format(i,score/step_counter))
 
 episode_history[-1].show_episode()

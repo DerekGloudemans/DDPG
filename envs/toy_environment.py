@@ -54,7 +54,7 @@ class Car_Follow_1D():
         reward = - abs(self.car1[1]-self.car2[1]) - (self.car1[0]-self.car2[0]-10)**2
         if self.car2[0] > self.car1[0]: # collision
             reward = self.crash_reward
-        if (self.car1[0] - self.car2[0]) > 35: # dropoff
+        if (self.car1[0] - self.car2[0]) > 100: # dropoff
             reward = self.crash_reward
         
         

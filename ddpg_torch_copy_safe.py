@@ -11,7 +11,7 @@ class OUActionNoise(object):
     distribution that tends to return to the mean over time
     call function returns noise (x) which has as many dimensions as network outputs
     """
-    def __init__(self, mu, sigma=0.15, theta=0.2, dt=1, x0=None,override = True):
+    def __init__(self, mu, sigma=0.15, theta=0.6, dt=1, x0=None,override = True):
         self.theta = theta  # 
         self.mu = mu        # distribution mean
         self.sigma = sigma  # distribution std dev
@@ -26,18 +26,19 @@ class OUActionNoise(object):
         self.x_prev = x
         
         if self.override:
-#            decay = 0.6
-#            x = np.random.normal(0,self.sigma*10.0) #temporary reduction of noise
-#            x = decay * self.x_prev + (1-decay)*x
-#            self.x_prev = x
+            decay = 0.5
+            x = np.random.normal(0,self.sigma)*20 #temporary reduction of noise
+            x = decay * self.x_prev + (1-decay)*x
+            self.x_prev = x
             
-            x = np.random.normal(0,self.sigma*10.0)*5.0 #temporary reduction of noise
+            x = np.random.normal(0,self.sigma)*20 #temporary reduction of noise
 
             
         return x
 
     def reset(self):
         self.x_prev = self.x0 if self.x0 is not None else np.zeros_like(self.mu)
+        self.sigma = self.sigma *0.995 # decays exploration noise
 
     def __repr__(self):
         return 'OrnsteinUhlenbeckActionNoise(mu={}, sigma={})'.format(
@@ -233,7 +234,7 @@ class Agent(object):
     Entire DDPG agent 
     """
     def __init__(self, alpha, beta, input_dims, tau, env, gamma=0.99,
-                 n_actions=2, max_size=1000000, layer1_size=400,
+                 n_actions=2, max_size=5000, layer1_size=400,
                  layer2_size=300, batch_size=64,activation = "sigmoid"):
         self.gamma = gamma              # discount factor on future rewards
         self.tau = tau                  # controls rate of target network adjustment

@@ -12,15 +12,15 @@ act_fn = "tanh"
 
 # define agent
 if True:
-    agent = Agent(alpha=0.003, beta=0.003, input_dims=[3], tau=0.0001, env=None,
-              batch_size=64,  layer1_size=100, layer2_size=50, n_actions=1,activation = act_fn)
-    agent.load_models()
+    agent = Agent(alpha=0.003, beta=0.03, input_dims=[3], tau=0.0001, env=None,
+              batch_size=64,  layer1_size=10, layer2_size=10, n_actions=1,activation = act_fn)
+    #agent.load_models()
     best_score = -100000000
     score_history = []
 
 episode_history = []
-crash_penalty = -1000000
-ep_len= 500
+crash_penalty = -3000
+ep_len= 250
 
 
 
@@ -28,18 +28,19 @@ print ("Starting Episodes")
 # for each loop, reset environment with new random seed
 for i in range(10000):
     # to create unique episodes
-    np.random.seed(2000+i)
-    random.seed(2000+i)
+    np.random.seed(i)
+    random.seed(i)
     
     # define environment
     agent_types = ["RL","IDM","IDM","IDM","IDM","IDM"]#,"IDM","IDM","IDM","IDM","IDM"]
     #agent_types = ["RL","IDM","IDM","IDM","IDM"]
     #agent_types = ["RL","RL","RL","RL","IDM"]
     #agent_types = ["RL", "RL","RL","RL","RL"]
+    agent_types = ["rand", "RL"]
     ring_length = np.random.randint(len(agent_types)*10,len(agent_types)*20)
     env = Multi_Car_Follow(sigma = 0.01,
                            idm_params=[1.0, 1.5, 10.0, 4.0, 1.2, 10.0],
-                           ring_length = ring_length,
+                           ring_length = None,
                            agent_list = agent_types,
                            crash_penalty = crash_penalty,
                            episode_length = ep_len,
@@ -64,7 +65,7 @@ for i in range(10000):
             
             # set done
             done = 0
-            if reward <= crash_penalty/ep_len or step_counter > ep_len: # terminal state
+            if reward == crash_penalty or step_counter > ep_len: # terminal state
                 done = 1
 
             # reshape inputs

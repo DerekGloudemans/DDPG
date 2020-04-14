@@ -79,9 +79,9 @@ class Multi_Car_Follow():
             elif self.agent_types[ag] == "RL":
                 act = model.choose_action(state,EVAL = False)
                 if self.agent_fn == "sigmoid":
-                    act = (act-0.5)*0.2
+                    act = (act-0.5)
                 else:
-                    act = act *0.1 # for tanh
+                    act = act *0.5 # for tanh
                 actions.append(act)
                 
             elif self.agent_types[ag] == "step":
@@ -183,7 +183,7 @@ class Multi_Car_Follow():
         # end of episode penalties
         for i in range(0,self.n_agents):
             if self.all_spacing[-1][i] < 0 or self.all_spacing[-1][i] > 100:
-                reward = self.crash_penalty * (self.episode_length-self.step)/self.episode_length
+                reward = self.crash_penalty #* (self.episode_length-self.step)/self.episode_length
                 break
         self.all_rewards.append(reward)
         

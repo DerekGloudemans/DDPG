@@ -260,18 +260,18 @@ from envs.environment_multi_with_IDM import Multi_Car_Follow
 if True and __name__ == "__main__":        
     # test code
     agent_list = ["step","step_accel","step_accel","step_accel","step_accel","step_accel"]
-    agent_list = ["RL","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM"]
-    
+    agent_list = ["RL","IDM","IDM","IDM","IDM","IDM","IDM","IDM"]
+    #agent_list = ["RL","RL","RL","RL","RL","RL","RL","RL"]
     if "RL" in agent_list: 
         model =  Agent_Safe(alpha=0.00001, beta=0.0001, input_dims=[3], tau=0.0001, env=None,
-              batch_size=64,  layer1_size=100, layer2_size=50, n_actions=1)
+              batch_size=64,  layer1_size=10, layer2_size=10, n_actions=1)
         model.load_models()
     else:
         model = None
         
     env = Multi_Car_Follow(agent_list = agent_list,
                                      idm_params=[1.0, 1.5, 30.0, 4.0, 1.2, 2.0],
-                                     ring_length = 80,
+                                     ring_length = 200,
                                      sigma = 0.1,
                                      crash_penalty = -10000,
                                      act_fn = "tanh")
