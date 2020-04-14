@@ -2,6 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mpc
 from scipy.ndimage.filters import gaussian_filter1d as filter_gaussian
+
+from ddpg_torch_copy import Agent
+
+
 class Multi_Car_Follow():
     """
     A simplistic environment that models n vehicles (leader and followers) along
@@ -15,7 +19,8 @@ class Multi_Car_Follow():
                  ring_length = None,
                  sigma = 0.1,
                  idm_params = np.zeros(6),
-                 crash_penalty = -10000):
+                 crash_penalty = -10000,
+                 episode_length = 500):
         
         self.n_agents = len(agent_list)
         self.idm_params = idm_params #
@@ -34,6 +39,7 @@ class Multi_Car_Follow():
         self.sigma = sigma
         self.crash_penalty = crash_penalty
         self.step = 0
+        self.episode_length = episode_length
         
         if ring_length is not None:
             self.RING = True
@@ -131,14 +137,8 @@ class Multi_Car_Follow():
                 if self.RING == False:
                     spacing[0] = 10#self.all_pos[-1][i-1]%self.ring_length - self.all_pos[-1][i]%self.ring_length 
                 else:
-                    pos_first = self.all_pos[-1][0]
-                    pos_last = self.all_pos[-1][-1]
-                    l = self.ring_length
-                    # case 1 - lead position % ring_length > last follower position (on same lap)
-                    if pos_first % l > pos_last % l:
-                        spacing[0] = l - (pos_first % l) + pos_last%l
-                    else:
-                        spacing[0] = (pos_last % l) - (pos_first % l)
+                    spacing[0] = self.all_pos[-1][-1] - (self.all_pos[-1][0] - self.ring_length)
+
             else:
                 spacing[i] = self.all_pos[-1][i-1] - self.all_pos[-1][i] 
         self.all_spacing.append(spacing)
@@ -152,16 +152,26 @@ class Multi_Car_Follow():
                 dv[i] = self.all_vel[-1][i] - self.all_vel[-1][i-1]
         self.all_dv.append(dv) 
         
-        # reward
-        REW_WEIGHT = 10
-        rew_vel = np.std(self.all_vel[-1]) * REW_WEIGHT
-        rew_spacing = np.sum(np.abs(self.all_spacing[-1]-10.0)**2) 
-        reward = -rew_vel -rew_spacing
+        if False: # use both a goal spacing and stddev of velocity for reward
+            # reward
+            REW_WEIGHT = 100
+            rew_vel = np.std(self.all_vel[-1]) * REW_WEIGHT
+            rew_spacing = 0 #np.sum(np.abs(self.all_spacing[-1]-10.0)**2) 
+            reward = -rew_vel -rew_spacing
+        
+        if False: # use only stddev of velocity
+            reward = - (100 * np.std(self.all_vel[-1])) - ((self.idm_params[2] - np.mean(self.all_vel[-1]))**2)
+            
+        if False: # reward = - squared difference in velocity + difference from goal velocity (2)
+            reward = -100* ( 10*(self.all_vel[-1][0] - self.all_vel[-1][1])**2 + (4 - self.all_vel[-1][1])**2)
+
+        if True: # constant spacing
+            reward = - (self.all_spacing[-1][1] - 20)**2
         
         # end of episode penalties
-        for i in range(1,self.n_agents):
+        for i in range(0,self.n_agents):
             if self.all_spacing[-1][i] < 0 or self.all_spacing[-1][i] > 40:
-                reward = self.crash_penalty
+                reward = self.crash_penalty * (self.episode_length-self.step)/self.episode_length
                 break
         self.all_rewards.append(reward)
         
@@ -180,7 +190,7 @@ class Multi_Car_Follow():
     def show_episode(self,close = True,smooth = True):
         plt.style.use("seaborn")
         
-        plt.figure(figsize = (40,10))
+        plt.figure(figsize = (30,10))
         plt.title("Single Episode")
         rrange = np.arange(0.4,1.0,0.6/self.n_agents)
         grange = np.arange(0.6,0.699,0.1/self.n_agents)
@@ -206,7 +216,7 @@ class Multi_Car_Follow():
                 plt.scatter(self.all_pos[i][j]%self.ring_length,1,color = colors[j])
                 
             reward = round(self.all_rewards[i] *1000)/1000.0
-            plt.annotate("Reward: {}".format(reward),(self.all_pos[i][1]%self.ring_length-5,1.1))
+            plt.annotate("Reward: {}".format(reward),((self.all_pos[i][1]%self.ring_length)-5,1.1))
 
             center = self.all_pos[i][0]
             plt.xlim([center -40*self.n_agents, center + 10])
@@ -250,17 +260,24 @@ class Multi_Car_Follow():
 if True and __name__ == "__main__":        
     # test code
     agent_list = ["step","step_accel","step_accel","step_accel","step_accel","step_accel"]
-    agent_list = ["step","IDM","IDM","IDM","IDM","IDM"]
-
+    agent_list = ["RL","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM","IDM"]
+    
+    if "RL" in agent_list: 
+        model =  Agent(alpha=0.00001, beta=0.0001, input_dims=[3], tau=0.0001, env=None,
+              batch_size=64,  layer1_size=100, layer2_size=50, n_actions=1)
+        model.load_models()
+    else:
+        model = None
+        
     env = Multi_Car_Follow(agent_list = agent_list,
                                      idm_params=[1.0, 1.5, 30.0, 4.0, 1.2, 2.0],
-                                     ring_length = 30,
+                                     ring_length = 90,
                                      sigma = 0.1,
                                      crash_penalty = -10000
                                      )
     
     for i in range(0,300):
-        actions = env.get_actions()
+        actions = env.get_actions(model = model)
         reward,step = env(actions)
 
     env.show_episode(smooth = True)
