@@ -415,9 +415,9 @@ class Agent(object):
             print(param, T.equal(original_critic_dict[param], current_critic_dict[param]))
         input()
 
-import matplotlib.pyplot as plt
-test = OUActionNoise(np.array(0))
-x = []
-for i in range(100):
-    x.append(test())
-plt.plot(x)
+#import matplotlib.pyplot as plt
+#test = OUActionNoise(np.array(0))
+#x = []
+#for i in range(100):
+#    x.append(test())
+#plt.plot(x)

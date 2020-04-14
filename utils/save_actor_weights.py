@@ -1,5 +1,4 @@
-from toy_environment_multi import Multi_Car_Follow_1D
-from ddpg_torch_copy import Agent
+from ddpg_torch_copy_safe import Agent
 #from DDPG_pytorch_phil_tabor.ddpg_torch import Agent
 
 import numpy as np
@@ -8,7 +7,7 @@ from torch import nn
 import scipy.io
 
 
-save_dir = "model1_weights_biases"
+save_dir = "model_weights_biases"
 
 
 # load agent
@@ -33,6 +32,7 @@ for i in range(len(layer_list)):
     #scipy.io.savemat(weight_path,weights)
     #scipy.io.savemat(bias_path,biases)
     
-scipy.io.savemat(os.path.join("model_arrays",save_dir),out_dict)
+#scipy.io.savemat(os.path.join("model_arrays",save_dir),out_dict)
+scipy.io.savemat(save_dir,out_dict)
     
     
