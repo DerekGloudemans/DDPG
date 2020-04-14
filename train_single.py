@@ -8,14 +8,17 @@ import random
 import numpy as np
 import os
 
-# define agent
-#agent = Agent_Safe(alpha=0.0001, beta=0.001, input_dims=[3], tau=0.002, env=None,
-#              batch_size=64,  layer1_size=100, layer2_size=50, n_actions=1)
+#activation_fn = "sigmoid"
+activation_fn = "tanh"
+
+#define agent
+agent = Agent_Safe(alpha=0.001, beta=0.01, input_dims=[3], tau=0.002, env=None,
+              batch_size=64,  layer1_size=100, layer2_size=50, n_actions=1, activation = activation_fn)
 agent.load_models()
 
 score_history = []
 episode_history = []
-crash_penalty = -1000
+crash_penalty = -10000
 
 print ("Starting Episodes")
 # for each loop, reset environment with new random seed
@@ -31,7 +34,11 @@ for i in range(1000):
     score = 0
     while not done:
         act = agent.choose_action(obs)
-        act = (act-0.5)*0.2 # accelerations in range (-0.2,0.2)
+        
+        if activation_fn == "tanh":
+            act = act*0.1
+        else:
+            act = (act-0.5)*0.2 # accelerations in range (-0.1,0.1)
         # shift action into reasonable range
         
         new_state,reward,step_counter = env(act)
@@ -63,7 +70,7 @@ for i in range(1000):
         
         # store episode history in file
         episode_history.append(env)
-        with open(os.path.join("checkpoints","episode_history2"),'wb') as f:
+        with open(os.path.join("model_current","episode_history"),'wb') as f:
             pickle.dump(episode_history,f)
 
     if i % 20 == 0:

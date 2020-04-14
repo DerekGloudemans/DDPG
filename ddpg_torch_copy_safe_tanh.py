@@ -31,7 +31,7 @@ class OUActionNoise(object):
 #            x = decay * self.x_prev + (1-decay)*x
 #            self.x_prev = x
             
-            x = np.random.normal(0,self.sigma*10.0)*5.0 #temporary reduction of noise
+            x = np.random.normal(0,self.sigma*10.0/3) #temporary reduction of noise
 
             
         return x
@@ -158,14 +158,13 @@ class ActorNetwork(nn.Module):
     Goal is to select action that results in the largest reward
     """
     def __init__(self, alpha, input_dims, fc1_dims, fc2_dims, n_actions, name,
-                 chkpt_dir='model_current',activation = 'sigmoid'):
+                 chkpt_dir='model_current'):
         super(ActorNetwork, self).__init__()
         # store parameters used to define network
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
         self.n_actions = n_actions
-        self.activation = activation
         
         # define save file name
         self.checkpoint_file = os.path.join(chkpt_dir,name+'_ddpg')
@@ -195,28 +194,14 @@ class ActorNetwork(nn.Module):
 
     def forward(self, state):
         # given state, return action
-        if self.activation == "sigmoid":
-            act_fn = T.sigmoid
-        elif self.activation == "tanh":
-            act_fn = T.tanh
-            
         x = self.fc1(state)
         # x = self.bn1(x)  -> remove to make easier to extract layers
-        x = act_fn(x)
+        x = T.sigmoid(x)
         x = self.fc2(x)
         # x = self.bn2(x)  -> remove to make easier to extract layers
-        x = act_fn(x)
+        x = T.sigmoid(x)
         #x = T.tanh(self.mu(x))
-        x = act_fn(self.mu(x))
-        
-#        x = self.fc1(state)
-#        # x = self.bn1(x)  -> remove to make easier to extract layers
-#        x = T.sigmoid(x)
-#        x = self.fc2(x)
-#        # x = self.bn2(x)  -> remove to make easier to extract layers
-#        x = T.sigmoid(x)
-#        #x = T.tanh(self.mu(x))
-#        x = T.sigmoid(self.mu(x))
+        x = T.sigmoid(self.mu(x))
         return x
 
     def save_checkpoint(self):
@@ -234,18 +219,18 @@ class Agent(object):
     """
     def __init__(self, alpha, beta, input_dims, tau, env, gamma=0.99,
                  n_actions=2, max_size=1000000, layer1_size=400,
-                 layer2_size=300, batch_size=64,activation = "sigmoid"):
+                 layer2_size=300, batch_size=64):
         self.gamma = gamma              # discount factor on future rewards
         self.tau = tau                  # controls rate of target network adjustment
         self.batch_size = batch_size    # for training
-        
+
         # stores memories
         self.memory = ReplayBuffer(max_size, input_dims, n_actions)
 
         # performs action selection
         self.actor = ActorNetwork(alpha, input_dims, layer1_size,
                                   layer2_size, n_actions=n_actions,
-                                  name='Actor', activation = activation)
+                                  name='Actor')
         # performs state-action policy gradient estimation
         self.critic = CriticNetwork(beta, input_dims, layer1_size,
                                     layer2_size, n_actions=n_actions,
@@ -254,7 +239,7 @@ class Agent(object):
         # remains stationary during policy gradient learning for stability
         self.target_actor = ActorNetwork(alpha, input_dims, layer1_size,
                                          layer2_size, n_actions=n_actions,
-                                         name='TargetActor',activation = activation)
+                                         name='TargetActor')
         
         # remains stationary during policy learning for stability
         self.target_critic = CriticNetwork(beta, input_dims, layer1_size,

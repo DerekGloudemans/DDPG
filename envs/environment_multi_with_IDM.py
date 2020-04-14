@@ -20,13 +20,15 @@ class Multi_Car_Follow():
                  sigma = 0.1,
                  idm_params = np.zeros(6),
                  crash_penalty = -10000,
-                 episode_length = 500):
+                 episode_length = 500,
+                 act_fn = "sigmoid"):
         
         self.n_agents = len(agent_list)
         self.idm_params = idm_params #
         
+        start_spacing = 10
         self.all_acc =     [np.zeros(self.n_agents)]
-        self.all_pos =     [np.arange(10*(self.n_agents-1),-1,-10)]
+        self.all_pos =     [np.arange(start_spacing*(self.n_agents-1),-1,-start_spacing)]
         self.all_spacing = [np.ones(self.n_agents)*10.0]
         self.all_vel =     [np.zeros(self.n_agents)]
         self.all_dv =      [np.zeros(self.n_agents)]
@@ -40,6 +42,7 @@ class Multi_Car_Follow():
         self.crash_penalty = crash_penalty
         self.step = 0
         self.episode_length = episode_length
+        self.agent_fn = act_fn
         
         if ring_length is not None:
             self.RING = True
@@ -75,7 +78,10 @@ class Multi_Car_Follow():
         
             elif self.agent_types[ag] == "RL":
                 act = model.choose_action(state,EVAL = False)
-                act = (act-0.5)*0.2
+                if self.agent_fn == "sigmoid":
+                    act = (act-0.5)*0.2
+                else:
+                    act = act *0.1 # for tanh
                 actions.append(act)
                 
             elif self.agent_types[ag] == "step":
@@ -152,6 +158,9 @@ class Multi_Car_Follow():
                 dv[i] = self.all_vel[-1][i] - self.all_vel[-1][i-1]
         self.all_dv.append(dv) 
         
+        
+        
+        
         if False: # use both a goal spacing and stddev of velocity for reward
             # reward
             REW_WEIGHT = 100
@@ -160,7 +169,7 @@ class Multi_Car_Follow():
             reward = -rew_vel -rew_spacing
         
         if True: # use only stddev of velocity and maximize total speed
-            reward = - (100 * np.std(self.all_vel[-1])) - ((self.idm_params[2] - np.mean(self.all_vel[-1]))**2)
+            reward = - 0*(10 * np.std(self.all_vel[-1])) - (100 - 10*np.mean(self.all_vel[-1]))
             
         if False: # reward = - squared difference in velocity + difference from goal velocity (2)
             reward = -100* ( 10*(self.all_vel[-1][0] - self.all_vel[-1][1])**2 + (4 - self.all_vel[-1][1])**2)
@@ -168,9 +177,12 @@ class Multi_Car_Follow():
         if False: # constant spacing
             reward = - (self.all_spacing[-1][1] - 20)**2
         
+        
+        
+        
         # end of episode penalties
         for i in range(0,self.n_agents):
-            if self.all_spacing[-1][i] < 0 or self.all_spacing[-1][i] > 40:
+            if self.all_spacing[-1][i] < 0 or self.all_spacing[-1][i] > 100:
                 reward = self.crash_penalty * (self.episode_length-self.step)/self.episode_length
                 break
         self.all_rewards.append(reward)
