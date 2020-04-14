@@ -8,15 +8,15 @@ import numpy as np
 import os
 
 # define agent
-if False:
-    agent = Agent(alpha=0.001, beta=0.001, input_dims=[3], tau=0.0001, env=None,
+if True:
+    agent = Agent(alpha=0.0003, beta=0.0003, input_dims=[3], tau=0.0001, env=None,
               batch_size=64,  layer1_size=100, layer2_size=50, n_actions=1)
     #agent.load_models()
     best_score = -100000000
     score_history = []
 
 episode_history = []
-crash_penalty = -1000000
+crash_penalty = -10000
 ep_len= 500
 
 
@@ -29,13 +29,13 @@ for i in range(10000):
     random.seed(2000+i)
     
     # define environment
-    agent_types = ["rand","RL","RL","RL","RL","RL","RL","RL","RL","RL"]
-    agent_types = ["RL","IDM","IDM","IDM","IDM"]
-    agent_types = ["RL","RL","RL","RL","IDM"]
-    agent_types = ["RL", "RL"]
+    agent_types = ["RL","IDM","IDM","IDM","IDM","IDM","IDM"]
+    #agent_types = ["RL","IDM","IDM","IDM","IDM"]
+    #agent_types = ["RL","RL","RL","RL","IDM"]
+    #agent_types = ["RL", "RL","RL","RL","RL"]
     env = Multi_Car_Follow(sigma = 0.01,
                            idm_params=[1.0, 1.5, 10.0, 4.0, 1.2, 10.0],
-                           ring_length = None,
+                           ring_length = 80,
                            agent_list = agent_types,
                            crash_penalty = crash_penalty,
                            episode_length = ep_len) 
@@ -90,7 +90,7 @@ for i in range(10000):
 
     if i % 5 == 0:
         env.show_episode()
-        
+    
     print('Episode {} average score: {}'.format(i,score))
     
     if  i % 25 == 0:

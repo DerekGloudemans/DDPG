@@ -31,7 +31,7 @@ class OUActionNoise(object):
 #            x = decay * self.x_prev + (1-decay)*x
 #            self.x_prev = x
             
-            x = np.random.normal(0,self.sigma*10.0/5) #temporary reduction of noise
+            x = np.random.normal(0,self.sigma*10.0/3) #temporary reduction of noise
 
             
         return x

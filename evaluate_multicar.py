@@ -271,7 +271,7 @@ if True and __name__ == "__main__":
         
     env = Multi_Car_Follow(agent_list = agent_list,
                                      idm_params=[1.0, 1.5, 30.0, 4.0, 1.2, 2.0],
-                                     ring_length = 90,
+                                     ring_length = 100,
                                      sigma = 0.1,
                                      crash_penalty = -10000
                                      )
