@@ -10,29 +10,29 @@ import os
 
 act_fn = "tanh"
 
-# define agent
+# define agent again
 if True:
     agent = Agent(alpha=0.003, beta=0.03, input_dims=[3], tau=0.0001, env=None,
-              batch_size=64,  layer1_size=10, layer2_size=10, n_actions=1,activation = act_fn)
-    #agent.load_models()
+              batch_size=64, max_size = 5000, layer1_size=20, layer2_size=10, n_actions=1,activation = act_fn)
+   # agent.load_models()
     best_score = -100000000
     score_history = []
 
-episode_history = []
-crash_penalty = -3000
-ep_len= 250
+    episode_history = []
+    crash_penalty = -3000
+    ep_len= 250
 
 
 
 print ("Starting Episodes")
 # for each loop, reset environment with new random seed
-for i in range(10000):
+for i in range(5000):
     # to create unique episodes
     np.random.seed(i)
     random.seed(i)
     
     # define environment
-    agent_types = ["RL","IDM","IDM","IDM","IDM","IDM"]#,"IDM","IDM","IDM","IDM","IDM"]
+    #agent_types = ["RL","IDM","IDM","IDM","IDM","IDM"]#,"IDM","IDM","IDM","IDM","IDM"]
     #agent_types = ["RL","IDM","IDM","IDM","IDM"]
     #agent_types = ["RL","RL","RL","RL","IDM"]
     #agent_types = ["RL", "RL","RL","RL","RL"]
@@ -86,21 +86,22 @@ for i in range(10000):
     score_history.append(score)
     agent.noise.reset()
     
-    # periodically save checkpoints of model states
+    print('Episode {} average score: {}'.format(i,score))
+
+    
     if i % 25 == 0:
-        
         # store episode history in file
         episode_history.append(env)
-        with open(os.path.join("model_current","episode_history{}".format(i)),'wb') as f:
+        with open(os.path.join("model_current","episode_history"),'wb') as f:
             pickle.dump(episode_history,f)
 
-    if i % 25 == 0:
-        env.show_episode()
-    
-    print('Episode {} average score: {}'.format(i,score))
-    
-    if  i % 25 == 0:
+    # store best checkpoint
+    if  score > best_score:
         best_score = score
-        agent.save_models()
+        if i > 0:
+            agent.save_models()
+        env.show_episode()
         print ("Saved new best model")
         
+    elif i % 25 == 0:
+        env.show_episode()

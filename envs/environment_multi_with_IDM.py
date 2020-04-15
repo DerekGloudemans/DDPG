@@ -26,7 +26,8 @@ class Multi_Car_Follow():
         self.n_agents = len(agent_list)
         self.idm_params = idm_params #
         
-        start_spacing = 10
+        start_spacing = np.random.randint(2,50)
+        
         self.all_acc =     [np.zeros(self.n_agents)]
         self.all_pos =     [np.arange(start_spacing*(self.n_agents-1),-1,-start_spacing)]
         self.all_spacing = [np.ones(self.n_agents)*10.0]
@@ -34,7 +35,7 @@ class Multi_Car_Follow():
         self.all_dv =      [np.zeros(self.n_agents)]
         self.all_rewards = [0]
         self.all_vel[0][0] = 1
-        self.all_dv[0][1] = -1
+        self.all_dv[0][1] = 1
         
         # store input params
         self.agent_types = agent_list
@@ -155,9 +156,11 @@ class Multi_Car_Follow():
             if i == 0: 
                 dv[i] = 0
             else:
-                dv[i] = self.all_vel[-1][i] - self.all_vel[-1][i-1]
+                dv[i] = self.all_vel[-1][i-1] - self.all_vel[-1][i] #leader - follower velocity
         self.all_dv.append(dv) 
         
+        
+        ####### Reward definition Section   #######
         
         
         
@@ -168,7 +171,7 @@ class Multi_Car_Follow():
             rew_spacing = 0 #np.sum(np.abs(self.all_spacing[-1]-10.0)**2) 
             reward = -rew_vel -rew_spacing
         
-        if True: # use only stddev of velocity and maximize total speed
+        if False: # use only stddev of velocity and maximize total speed
             reward = - 0*(10 * np.std(self.all_vel[-1])) - (100 - 10*np.mean(self.all_vel[-1]))
             
         if False: # reward = - squared difference in velocity + difference from goal velocity (2)
@@ -177,8 +180,12 @@ class Multi_Car_Follow():
         if False: # constant spacing
             reward = - (self.all_spacing[-1][1] - 20)**2
         
-        
-        
+        # constant headway (tau timesteps) reward
+        vel = self.all_vel[-1][1]
+        tau = 4
+        spacing = self.all_spacing[-1][1]
+        s0 = 2
+        reward = - (spacing - vel*tau - s0)**2        
         
         # end of episode penalties
         for i in range(0,self.n_agents):
@@ -231,6 +238,7 @@ class Multi_Car_Follow():
             plt.annotate("Reward: {}".format(reward),((self.all_pos[i][1]%self.ring_length)-5,1.1))
 
             center = self.all_pos[i][0]
+            plt.ylim([0,3])
             plt.xlim([center -40*self.n_agents, center + 10])
             if self.RING:
                 plt.xlim([0,self.ring_length])
