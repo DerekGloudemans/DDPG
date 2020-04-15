@@ -12,7 +12,7 @@ save_dir = "model_weights_biases"
 
 # load agent
 agent = Agent(alpha=0.0001, beta=0.001, input_dims=[3], tau=0.002, env=None,
-              batch_size=64,  layer1_size=10, layer2_size=10, n_actions=1)
+              batch_size=64,  layer1_size=20, layer2_size=10, n_actions=1)
 agent.load_models()
 
 layer_list = []
