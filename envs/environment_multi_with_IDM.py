@@ -161,49 +161,56 @@ class Multi_Car_Follow():
         
         
         ####### Reward definition Section   #######
-    
+        reward = 0
         
         # constant headway (tau timesteps) reward
-        if False: # constant headway
+        if True: # constant headway
             vel = self.all_vel[-1][1]
-            tau = 4
+            tau = 10 #4
             spacing = self.all_spacing[-1][1]
             s0 = 2
-            reward = - (spacing - vel*tau - s0)**2     
+            reward = reward - (spacing - vel*tau - s0)**2     
             
-        if True: # constant headway
+        if False: # constant headway
             vel = self.all_vel[-1][1]
             tau = 4
             spacing = self.all_spacing[-1][1]
             s0 = 2
             dv = self.all_dv[-1][1]
             
-            reward = - (spacing - vel*tau - s0)**2  - 100*np.sum(np.abs(actions))
+            reward = reward - (spacing - vel*tau - s0)**2  - 100*np.sum(np.abs(actions))
         
-        if False:
-            reward = - (10 - np.mean(self.all_vel[-1]))
+        if False: #average velocity
+            reward = reward - (10 - np.mean(self.all_vel[-1]))
         
         
         # end of episode penalties
         for i in range(0,self.n_agents):
-            if self.all_spacing[-1][i] < 0 or self.all_spacing[-1][i] > 100:
+            if self.all_spacing[-1][i] < 0: 
                 reward = self.crash_penalty #* (self.episode_length-self.step)/self.episode_length
                 break
-        self.all_rewards.append(reward)
+
+        if self.ring_length is not None:
+            for i in range(0,self.n_agents):
+                if self.all_spacing[-1][i] > 100:
+                    reward = self.crash_penalty / 2
+                    break
         
-        self.step += 1
         
         # flatten reward for some reason
         try:
             reward = reward[0]
         except:
             pass
+
+        self.all_rewards.append(reward)
         
+        self.step += 1
 
         return reward,self.step
  
     
-    def show_episode(self,close = True,smooth = True):
+    def show_episode(self,close = True,smooth = True,SAVE = False):
         plt.style.use("seaborn")
         
         plt.figure(figsize = (30,10))
@@ -232,7 +239,7 @@ class Multi_Car_Follow():
                 plt.scatter(self.all_pos[i][j]%self.ring_length,1,color = colors[j])
                 
             reward = round(self.all_rewards[i] *1000)/1000.0
-            plt.annotate("Reward: {}".format(reward),((self.all_pos[i][1]%self.ring_length)-5,1.1))
+            plt.annotate("Reward: {}".format(reward),((self.all_pos[i][1]%self.ring_length),1.1))
 
             center = self.all_pos[i][0]
             plt.ylim([0,3])
@@ -268,9 +275,17 @@ class Multi_Car_Follow():
             plt.xlim([0,len(self.all_pos)])
             plt.legend(legend)
             
+            if SAVE:
+                plt.savefig("plot_frames//step{}.png".format(str(i).zfill(4)))
+                if i == 0:
+                    for rep in range(100):
+                        plt.savefig("plot_frames//step{}_{}.png".format(str(i).zfill(4),str(rep).zfill(4)))
             plt.draw()
             plt.pause(0.0001)
             plt.clf()
+            
+           
+                
         if close:
             plt.close()
 

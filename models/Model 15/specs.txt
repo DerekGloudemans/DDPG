@@ -1,0 +1,9 @@
+Model 15
+
+Layer Sizes: 3,20,10,1
+Activation Function: tanh
+Batchnorm?: No
+Training Environment: Ring Road with IDMs
+Reward: Average Velocity
+Exploration Noise: 20 * sigma, sigma = 0.15 intial, 0.995 decay per episode
+Transfer Learning: From Model 12

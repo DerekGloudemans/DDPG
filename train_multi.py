@@ -8,19 +8,19 @@ import numpy as np
 import os
 
 
-act_fn = "tanh"
+act_fn = "sigmoid"
 
 # define agent again
 if True:
-    agent = Agent(alpha=0.003, beta=0.03, input_dims=[3], tau=0.0001, env=None,
+    agent = Agent(alpha=0.0001, beta=0.01, input_dims=[3], tau=0.0001, env=None,
               batch_size=64, max_size = 5000, layer1_size=20, layer2_size=10, n_actions=1,activation = act_fn)
-    agent.load_models()
+    #agent.load_models()
     best_score = -100000000
     score_history = []
 
     episode_history = []
-    crash_penalty = -3000
-    ep_len= 250
+    crash_penalty = -500
+    ep_len= 350
 
 
 
@@ -33,19 +33,19 @@ for i in range(2000):
     
     # define environment
     #agent_types = ["RL","IDM","IDM","IDM","IDM","IDM"]#,"IDM","IDM","IDM","IDM","IDM"]
-    #agent_types = ["IDM", "RL","IDM","IDM","IDM","IDM"]
+    #agent_types = ["IDM","RL","IDM","IDM","IDM"]
     #agent_types = ["RL","RL","RL","RL","IDM"]
-    #agent_types = ["RL", "RL","RL","RL","RL"]
+    #agent_types = ["RL","IDM","IDM", "IDM","IDM","IDM"]
     agent_types = ["rand", "RL"]
     #agent_types = ["RL","RL","RL"]
     ring_length = np.random.randint(len(agent_types)*10,len(agent_types)*20)
-    env = Multi_Car_Follow(sigma = 0.01,
+    env = Multi_Car_Follow(sigma = 0.2,
                            idm_params=[1.0, 1.5, 10.0, 4.0, 1.2, 10.0],
-                           ring_length = 60,
+                           ring_length = None,
                            agent_list = agent_types,
                            crash_penalty = crash_penalty,
                            episode_length = ep_len,
-                           act_fn = "sigmoid") 
+                           act_fn = act_fn) 
    
     done = False
     score = 0
@@ -66,7 +66,7 @@ for i in range(2000):
             
             # set done
             done = 0
-            if reward == crash_penalty or step_counter > ep_len: # terminal state
+            if reward in [crash_penalty,crash_penalty/2] or step_counter > ep_len: # terminal state
                 done = 1
 
             # reshape inputs
@@ -93,7 +93,7 @@ for i in range(2000):
     if i % 25 == 0:
         # store episode history in file
         episode_history.append(env)
-        with open(os.path.join("model_current","episode_history"),'wb') as f:
+        with open(os.path.join("model_current","episode_history.cpkl"),'wb') as f:
             pickle.dump(episode_history,f)
 
     # store best checkpoint
@@ -106,3 +106,4 @@ for i in range(2000):
         
     elif i % 25 == 0:
         env.show_episode()
+
