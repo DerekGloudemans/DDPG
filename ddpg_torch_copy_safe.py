@@ -31,7 +31,7 @@ class OUActionNoise(object):
             x = decay * self.x_prev + (1-decay)*x
             self.x_prev = x
             
-            x =  np.random.normal(0,self.sigma)*20 #temporary reduction of noise
+            x = 0#np.random.normal(0,self.sigma)*20 #temporary reduction of noise
 
             
         return x
@@ -350,6 +350,19 @@ class Agent(object):
         # get actions
         mu = self.actor.forward(state)
         self.actor.train()
+        
+
+        # add L2 regularization
+        if True:
+            l2_crit = nn.MSELoss(size_average=False)
+            reg_loss = 0
+            for param in self.actor.parameters():
+                reg_loss += l2_crit(param,T.zeros(param.shape))
+            factor = 0.5
+            reg_loss = reg_loss * factor
+            #print("Regularization Loss: {}".format(reg_loss))
+            reg_loss.backward(retain_graph = True)
+        
         # loss is the mean negative state_action value (a negative value itself, so loss is positive) computed using critic
         actor_loss = -self.critic.forward(state, mu)
         actor_loss = T.mean(actor_loss)

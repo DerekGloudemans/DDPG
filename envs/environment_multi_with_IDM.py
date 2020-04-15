@@ -164,14 +164,14 @@ class Multi_Car_Follow():
         reward = 0
         
         # constant headway (tau timesteps) reward
-        if True: # constant headway
+        if False: # constant headway
             vel = self.all_vel[-1][1]
             tau = 10 #4
             spacing = self.all_spacing[-1][1]
             s0 = 2
             reward = reward - (spacing - vel*tau - s0)**2     
             
-        if False: # constant headway
+        if True: # constant headway
             vel = self.all_vel[-1][1]
             tau = 4
             spacing = self.all_spacing[-1][1]

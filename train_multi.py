@@ -8,7 +8,7 @@ import numpy as np
 import os
 
 
-act_fn = "sigmoid"
+act_fn = "tanh"
 
 # define agent again
 if True:
@@ -19,7 +19,7 @@ if True:
     score_history = []
 
     episode_history = []
-    crash_penalty = -500
+    crash_penalty = -5000
     ep_len= 350
 
 
@@ -97,7 +97,7 @@ for i in range(2000):
             pickle.dump(episode_history,f)
 
     # store best checkpoint
-    if  True and score > best_score:
+    if  False and score > best_score:
         best_score = score
         if i > 0:
             agent.save_models()
