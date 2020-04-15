@@ -14,7 +14,7 @@ act_fn = "tanh"
 if True:
     agent = Agent(alpha=0.003, beta=0.03, input_dims=[3], tau=0.0001, env=None,
               batch_size=64, max_size = 5000, layer1_size=20, layer2_size=10, n_actions=1,activation = act_fn)
-   # agent.load_models()
+    agent.load_models()
     best_score = -100000000
     score_history = []
 
@@ -26,25 +26,26 @@ if True:
 
 print ("Starting Episodes")
 # for each loop, reset environment with new random seed
-for i in range(5000):
+for i in range(2000):
     # to create unique episodes
     np.random.seed(i)
     random.seed(i)
     
     # define environment
     #agent_types = ["RL","IDM","IDM","IDM","IDM","IDM"]#,"IDM","IDM","IDM","IDM","IDM"]
-    #agent_types = ["RL","IDM","IDM","IDM","IDM"]
+    #agent_types = ["IDM", "RL","IDM","IDM","IDM","IDM"]
     #agent_types = ["RL","RL","RL","RL","IDM"]
     #agent_types = ["RL", "RL","RL","RL","RL"]
     agent_types = ["rand", "RL"]
+    #agent_types = ["RL","RL","RL"]
     ring_length = np.random.randint(len(agent_types)*10,len(agent_types)*20)
     env = Multi_Car_Follow(sigma = 0.01,
                            idm_params=[1.0, 1.5, 10.0, 4.0, 1.2, 10.0],
-                           ring_length = None,
+                           ring_length = 60,
                            agent_list = agent_types,
                            crash_penalty = crash_penalty,
                            episode_length = ep_len,
-                           act_fn = "tanh") 
+                           act_fn = "sigmoid") 
    
     done = False
     score = 0
@@ -96,7 +97,7 @@ for i in range(5000):
             pickle.dump(episode_history,f)
 
     # store best checkpoint
-    if  score > best_score:
+    if  True and score > best_score:
         best_score = score
         if i > 0:
             agent.save_models()

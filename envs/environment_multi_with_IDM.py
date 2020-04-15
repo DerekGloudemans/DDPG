@@ -161,31 +161,28 @@ class Multi_Car_Follow():
         
         
         ####### Reward definition Section   #######
-        
-        
-        
-        if False: # use both a goal spacing and stddev of velocity for reward
-            # reward
-            REW_WEIGHT = 100
-            rew_vel = np.std(self.all_vel[-1]) * REW_WEIGHT
-            rew_spacing = 0 #np.sum(np.abs(self.all_spacing[-1]-10.0)**2) 
-            reward = -rew_vel -rew_spacing
-        
-        if False: # use only stddev of velocity and maximize total speed
-            reward = - 0*(10 * np.std(self.all_vel[-1])) - (100 - 10*np.mean(self.all_vel[-1]))
-            
-        if False: # reward = - squared difference in velocity + difference from goal velocity (2)
-            reward = -100* ( 10*(self.all_vel[-1][0] - self.all_vel[-1][1])**2 + (4 - self.all_vel[-1][1])**2)
-
-        if False: # constant spacing
-            reward = - (self.all_spacing[-1][1] - 20)**2
+    
         
         # constant headway (tau timesteps) reward
-        vel = self.all_vel[-1][1]
-        tau = 4
-        spacing = self.all_spacing[-1][1]
-        s0 = 2
-        reward = - (spacing - vel*tau - s0)**2        
+        if True: # constant headway
+            vel = self.all_vel[-1][1]
+            tau = 4
+            spacing = self.all_spacing[-1][1]
+            s0 = 2
+            reward = - (spacing - vel*tau - s0)**2     
+            
+        if False: # constant headway
+            vel = self.all_vel[-1][1]
+            tau = 4
+            spacing = self.all_spacing[-1][1]
+            s0 = 2
+            dv = self.all_dv[-1][1]
+            
+            reward = - (spacing - vel*tau - s0)**2  - 100*np.sum(np.abs(actions))
+        
+        if False:
+            reward = - (10 - np.mean(self.all_vel[-1]))
+        
         
         # end of episode penalties
         for i in range(0,self.n_agents):
